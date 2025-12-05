@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  hashedPassword String
+  name           String
+  created_at     DateTime @default(now())
+  items          Item[]
+
+  @@map("users")
+}
+
+model Item {
+  id               String    @id @default(uuid())
+  user_id          String
+  access_token     String    @unique
+  plaid_item_id    String    @unique
+  institution_name String
+  institution_id   String
+  created_at       DateTime  @default(now())
+  user             User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  accounts         Account[]
+
+  @@map("items")
+}
+
+model Account {
+  id               String        @id @default(uuid())
+  item_id          String
+  plaid_account_id String        @unique
+  name             String
+  item             Item          @relation(fields: [item_id], references: [id], onDelete: Cascade)
+  transactions     Transaction[]
+
+  @@map("accounts")
+}
+
+model Transaction {
+  id                   String    @id @default(uuid())
+  account_id           String
+  plaid_transaction_id String    @unique
+  amount               Decimal
+  name                 String
+  merchant_name        String?
+  category             String[]
+  date                 DateTime
+  authorized_date      DateTime?
+  pending              Boolean
+  iso_currency_code    String?
+  created_at           DateTime  @default(now())
+  account              Account   @relation(fields: [account_id], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
+}
