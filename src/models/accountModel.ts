@@ -58,6 +58,14 @@ export const getUserAccounts = async (user_id: string) => {
           user_id,
         },
       },
+      include: {
+        item: {
+          select: {
+            institution_id: true,
+            institution_name: true,
+          },
+        },
+      },
     });
     return accounts;
   } catch (err) {

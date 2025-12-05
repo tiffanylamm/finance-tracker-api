@@ -73,8 +73,8 @@ export const getUserTransactions = async ({
       },
       include: {
         account: {
-          include: {
-            item: true,
+          select: {
+            name: true,
           },
         },
       },

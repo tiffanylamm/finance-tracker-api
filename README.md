@@ -138,17 +138,14 @@ Retrieves all transactions for a specific user.
     "amount": "25.50",
     "name": "Coffee Shop",
     "merchant_name": "Starbucks",
-    "category": null,
+    "category": [],
     "date": "2024-12-01T00:00:00.000Z",
     "authorized_date": "2024-12-01T00:00:00.000Z",
     "pending": false,
     "iso_currency_code": "USD",
+    "created_at": "2024-12-01T00:00:00.000Z",
     "account": {
-      "id": "account_id",
       "name": "Checking Account",
-      "item": {
-        "institution_name": "Chase"
-      }
     }
   }
 ]
@@ -171,7 +168,11 @@ Retrieves all accounts for a specific user.
       "id": "account_id",
       "item_id": "item_id",
       "plaid_account_id": "plaid_account_id",
-      "name": "Checking Account"
+      "name": "Checking Account", 
+      "item": {
+        "institution_id": "institution_id", 
+        "institution_name": "Bank Name"
+      }
     }
   ]
 }
