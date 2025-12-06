@@ -17,18 +17,4 @@ router.put("/users/:user_id", verifyToken, userController.updateUser);
 //delete
 router.delete("/users/:user_id", verifyToken, userController.deleteUser);
 
-//get transactions
-router.get(
-  "/users/:user_id/transactions",
-  verifyToken,
-  transactionController.getTransactions
-);
-
-//get account
-router.get(
-  "/users/:user_id/accounts",
-  verifyToken,
-  accountController.getUserAccounts
-);
-
 export default router;

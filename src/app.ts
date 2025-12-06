@@ -2,6 +2,9 @@ import "dotenv/config";
 import express from "express";
 import plaidRouter from "./routes/plaid";
 import userRouter from "./routes/user";
+import itemRouter from "./routes/item";
+import accountRouter from "./routes/account";
+import transactionRouter from "./routes/transactions";
 import cors from "cors";
 import { Products, Configuration, PlaidEnvironments, PlaidApi } from "plaid";
 import { errorHandler } from "./middleware /errorHandler";
@@ -22,6 +25,10 @@ app.use(cors());
 //routes
 app.use("/api/plaid", plaidRouter);
 app.use("/api", userRouter);
+app.use("/api/items", itemRouter);
+app.use("/api/accounts", accountRouter);
+app.use("/api/transactions", transactionRouter);
+
 
 //errorHandling
 app.use(errorHandler);

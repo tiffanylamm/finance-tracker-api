@@ -1,12 +1,15 @@
 # API Documentation
 
 ## Base URL
+
 ```
 http://localhost:9000/api
 ```
 
 ## Authentication
+
 Most endpoints require JWT authentication. Include the token in the Authorization header:
+
 ```
 Authorization: Bearer <your_jwt_token>
 ```
@@ -16,6 +19,7 @@ Authorization: Bearer <your_jwt_token>
 ## User Routes
 
 ### Register User
+
 Creates a new user account.
 
 **Endpoint:** `POST /users`
@@ -23,6 +27,7 @@ Creates a new user account.
 **Authentication:** Not required
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -32,6 +37,7 @@ Creates a new user account.
 ```
 
 **Response:** `201 Created`
+
 ```json
 {
   "message": "Successful Register",
@@ -47,6 +53,7 @@ Creates a new user account.
 ---
 
 ### Login
+
 Authenticates a user and returns a JWT token.
 
 **Endpoint:** `POST /login`
@@ -54,6 +61,7 @@ Authenticates a user and returns a JWT token.
 **Authentication:** Not required
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -62,6 +70,7 @@ Authenticates a user and returns a JWT token.
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "message": "Successful login",
@@ -77,6 +86,7 @@ Authenticates a user and returns a JWT token.
 ---
 
 ### Update User
+
 Updates user information (email and/or name).
 
 **Endpoint:** `PUT /users/:user_id`
@@ -84,6 +94,7 @@ Updates user information (email and/or name).
 **Authentication:** Required
 
 **Request Body:**
+
 ```json
 {
   "email": "newemail@example.com",
@@ -92,6 +103,7 @@ Updates user information (email and/or name).
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "message": "Successfully updated user.",
@@ -106,6 +118,7 @@ Updates user information (email and/or name).
 ---
 
 ### Delete User
+
 Deletes the authenticated user's account.
 
 **Endpoint:** `DELETE /users/:user_id`
@@ -113,6 +126,7 @@ Deletes the authenticated user's account.
 **Authentication:** Required (must be the account owner)
 
 **Response:** `200 OK`
+
 ```json
 {
   "message": "User successfully deleted."
@@ -121,46 +135,48 @@ Deletes the authenticated user's account.
 
 ---
 
-### Get User Transactions
-Retrieves all transactions for a specific user.
+## Item Routes
 
-**Endpoint:** `GET /users/:user_id/transactions`
+### Get User Items
+
+Retrieves all items for a specific user.
+
+**Endpoint:** `GET /items`
 
 **Authentication:** Required
 
 **Response:** `200 OK`
+
 ```json
-[
-  {
-    "id": "transaction_id",
-    "account_id": "account_id",
-    "plaid_transaction_id": "plaid_txn_id",
-    "amount": "25.50",
-    "name": "Coffee Shop",
-    "merchant_name": "Starbucks",
-    "category": [],
-    "date": "2024-12-01T00:00:00.000Z",
-    "authorized_date": "2024-12-01T00:00:00.000Z",
-    "pending": false,
-    "iso_currency_code": "USD",
-    "created_at": "2024-12-01T00:00:00.000Z",
-    "account": {
-      "name": "Checking Account",
+{
+  "items": [
+    {
+      "id": "item_id",
+      "user_id": "user_id",
+      "access_token": "token",
+      "plaid_item_id": "plaid_item_id",
+      "institution_name": "Bank Name",
+      "institution_id": "bank_id",
+      "created_at": "2024-12-01T00:00:00.000Z"
     }
-  }
-]
+  ]
+}
 ```
 
 ---
 
+## Account Routes
+
 ### Get User Accounts
+
 Retrieves all accounts for a specific user.
 
-**Endpoint:** `GET /users/:user_id/accounts`
+**Endpoint:** `GET /accounts`
 
 **Authentication:** Required
 
 **Response:** `200 OK`
+
 ```json
 {
   "accounts": [
@@ -168,10 +184,48 @@ Retrieves all accounts for a specific user.
       "id": "account_id",
       "item_id": "item_id",
       "plaid_account_id": "plaid_account_id",
-      "name": "Checking Account", 
+      "name": "Checking Account",
       "item": {
-        "institution_id": "institution_id", 
+        "institution_id": "institution_id",
         "institution_name": "Bank Name"
+      }
+    }
+  ]
+}
+```
+
+---
+
+## Transaction Routes
+
+### Get User Transactions
+
+Retrieves all transactions for a specific user.
+
+**Endpoint:** `GET /transactions`
+
+**Authentication:** Required
+
+**Response:** `200 OK`
+
+```json
+{
+  "transactions": [
+    {
+      "id": "transaction_id",
+      "account_id": "account_id",
+      "plaid_transaction_id": "plaid_txn_id",
+      "amount": "25.50",
+      "name": "Coffee Shop",
+      "merchant_name": "Starbucks",
+      "category": [],
+      "date": "2024-12-01T00:00:00.000Z",
+      "authorized_date": "2024-12-01T00:00:00.000Z",
+      "pending": false,
+      "iso_currency_code": "USD",
+      "created_at": "2024-12-01T00:00:00.000Z",
+      "account": {
+        "name": "Checking Account"
       }
     }
   ]
@@ -183,6 +237,7 @@ Retrieves all accounts for a specific user.
 ## Plaid Routes
 
 ### Create Link Token
+
 Generates a Plaid Link token for connecting financial institutions.
 
 **Endpoint:** `POST /plaid/create_link_token`
@@ -190,6 +245,7 @@ Generates a Plaid Link token for connecting financial institutions.
 **Authentication:** Required
 
 **Response:** `200 OK`
+
 ```json
 {
   "link_token": "link-sandbox-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
@@ -201,6 +257,7 @@ Generates a Plaid Link token for connecting financial institutions.
 ---
 
 ### Exchange Public Token
+
 Exchanges a Plaid public token for an access token and stores account/transaction data.
 
 **Endpoint:** `POST /plaid/exchange_public_token`
@@ -208,6 +265,7 @@ Exchanges a Plaid public token for an access token and stores account/transactio
 **Authentication:** Required
 
 **Request Body:**
+
 ```json
 {
   "public_token": "public-sandbox-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
@@ -221,6 +279,7 @@ Exchanges a Plaid public token for an access token and stores account/transactio
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "access_token": "access-sandbox-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
@@ -228,6 +287,7 @@ Exchanges a Plaid public token for an access token and stores account/transactio
 ```
 
 **Note:** This endpoint automatically:
+
 - Creates an item record
 - Fetches and stores all associated accounts
 - Retrieves the last 30 days of transactions
@@ -235,6 +295,7 @@ Exchanges a Plaid public token for an access token and stores account/transactio
 ---
 
 ### Get Transactions by Item
+
 Retrieves transactions for a specific Plaid item (last 30 days).
 
 **Endpoint:** `GET /plaid/items/:item_id/transactions`
@@ -242,6 +303,7 @@ Retrieves transactions for a specific Plaid item (last 30 days).
 **Authentication:** Required
 
 **Response:** `200 OK`
+
 ```json
 {
   "accounts": [...],
@@ -259,6 +321,7 @@ Retrieves transactions for a specific Plaid item (last 30 days).
 All endpoints may return error responses in the following format:
 
 **Response:** `4xx` or `5xx`
+
 ```json
 {
   "error": "Error message describing what went wrong"
@@ -266,6 +329,7 @@ All endpoints may return error responses in the following format:
 ```
 
 Common error codes:
+
 - `400` - Bad Request (invalid input)
 - `401` - Unauthorized (missing or invalid token)
 - `404` - Not Found (resource doesn't exist)

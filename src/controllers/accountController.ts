@@ -48,7 +48,7 @@ export const getUserAccounts = async (
   next: NextFunction
 ) => {
   try {
-    const user_id: string = req.params.user_id;
+    const user_id: string = req.user.id;
     const accounts: Account[] = await accountModel.getUserAccounts(user_id);
     res.status(200).json({ accounts });
   } catch (err) {

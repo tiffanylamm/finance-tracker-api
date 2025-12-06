@@ -42,6 +42,19 @@ export const getItem = async (filter: any) => {
   }
 };
 
+export const getUserItems = async (user_id: string) => {
+  try {
+    const items = await prisma.item.findMany({
+      where: {
+        user_id,
+      },
+    });
+    return items;
+  } catch (err) {
+    throw err;
+  }
+};
+
 //update
 export const updateItem = async ({
   item_id,

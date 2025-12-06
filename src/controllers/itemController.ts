@@ -42,6 +42,20 @@ export const getItem = async (
   }
 };
 
+export const getUserItems = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user_id = req.user.id;
+    const items = await itemModel.getUserItems(user_id);
+    res.status(200).json({ items });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const deleteItem = async (
   req: Request,
   res: Response,
