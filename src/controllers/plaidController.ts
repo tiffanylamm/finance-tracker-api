@@ -204,3 +204,30 @@ export const getTransactions = async (
     next(err);
   }
 };
+
+export const removeItem = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { access_token } = req.body;
+
+  if (!access_token) {
+    return res.status(400).json({ error: "Access token is required." });
+  }
+
+  try {
+    await client.itemRemove({ access_token });
+    console.log("Item successfully removed.");
+    res.status(200).json({
+      success: true,
+      message: `Financial institution connection removed.`,
+    });
+  } catch (err) {
+    console.error(`Error removing plaid item.`);
+    res.status(500).json({
+      success: false,
+      error: "Failed to remove Item connection.",
+    });
+  }
+};

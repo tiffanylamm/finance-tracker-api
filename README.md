@@ -165,6 +165,22 @@ Retrieves all items for a specific user.
 
 ---
 
+### Delete Item
+
+Deletes an item.
+
+**Endpoint:** `DELETE /items/:item_id`
+
+**Authentication:** Required
+
+**Response:** `200 OK`
+
+```json
+{ "message": "Item successfully deleted" }
+```
+
+---
+
 ## Account Routes
 
 ### Get User Accounts
@@ -311,6 +327,25 @@ Retrieves transactions for a specific Plaid item (last 30 days).
   "item": {...},
   "total_transactions": 50,
   "request_id": "request_id_here"
+}
+```
+
+---
+
+### Remove Item
+
+Remove plaid item.
+
+**Endpoint:** `POST /plaid/remove_item`
+
+**Authentication:** Required
+
+**Response:** `200 OK`
+
+```json
+{
+  "success": true,
+  "message": "Financial institution connection removed."
 }
 ```
 

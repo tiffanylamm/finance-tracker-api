@@ -7,8 +7,18 @@ const router = Router();
 
 router.post("/create_link_token", verifyToken, plaidController.createLinkToken);
 
-router.post("/exchange_public_token", verifyToken, plaidController.exchangePublicToken);
+router.post(
+  "/exchange_public_token",
+  verifyToken,
+  plaidController.exchangePublicToken
+);
 
-router.get("/items/:item_id/transactions", verifyToken, plaidController.getTransactions);
+router.get(
+  "/items/:item_id/transactions",
+  verifyToken,
+  plaidController.getTransactions
+);
+
+router.post("/remove_item", verifyToken, plaidController.removeItem);
 
 export default router;
