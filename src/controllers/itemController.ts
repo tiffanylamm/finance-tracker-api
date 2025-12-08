@@ -54,7 +54,7 @@ export const getUserItems = async (
   next: NextFunction
 ) => {
   try {
-    const user_id = req.user.id;
+    const { id: user_id } = req.user;
     const items: Item[] = await itemModel.getUserItems(user_id);
     res.status(200).json({ items });
   } catch (err) {

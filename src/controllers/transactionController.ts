@@ -7,7 +7,7 @@ export const getTransactions = async (
   next: NextFunction
 ) => {
   try {
-    const user_id: string = req.user.id;
+    const { id: user_id } = req.user;
     const transactions = await transactionModel.getUserTransactions({
       user_id,
     });
@@ -31,7 +31,7 @@ export const updateTransaction = async (
       id: user_id,
       data,
     });
-    
+
     return res.status(200).json({ transaction });
   } catch (err) {
     next(err);
