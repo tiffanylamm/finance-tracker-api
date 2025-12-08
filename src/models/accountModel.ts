@@ -80,6 +80,27 @@ export const getUserAccounts = async (user_id: string) => {
 };
 
 //update
+export const updateAccount = async ({
+  account_id,
+  name,
+}: {
+  account_id: string;
+  name: string;
+}) => {
+  try {
+    const updatedAccount = await prisma.account.update({
+      data: {
+        name,
+      },
+      where: {
+        id: account_id,
+      },
+    });
+    return updatedAccount;
+  } catch (err) {
+    throw err;
+  }
+};
 
 //delete
 export const deleteAccount = async ({ account_id }: { account_id: string }) => {

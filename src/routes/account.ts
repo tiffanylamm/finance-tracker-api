@@ -5,4 +5,8 @@ const router = express.Router();
 
 router.get("/", verifyToken, accountController.getUserAccounts);
 
+router.put("/:account_id", verifyToken, accountController.updateAccount);
+
+router.delete("/:account_id", verifyToken, accountController.deleteAccount);
+
 export default router;

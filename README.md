@@ -217,6 +217,73 @@ Retrieves all accounts for a specific user.
 
 ---
 
+### Update Account
+
+Updates account(name).
+
+**Endpoint:** `PUT /account/:account_id`
+
+**Authentication:** Required
+
+**Request Body:**
+
+```json
+{
+  "name": "Credit Card"
+}
+```
+
+**Response:** `200 OK`
+
+```json
+{
+  "message": "BofA Credit Card updated",
+  "account": {
+    "id": "account_id",
+    "item_id": "item_id",
+    "plaid_account_id": "plaid_account_id",
+    "name": "Checking Account",
+    "mask": "1234",
+    "balance": "25.50",
+    "item": {
+      "institution_id": "institution_id",
+      "institution_name": "Bank Name"
+    }
+  }
+}
+```
+---
+
+### Delete Account
+
+Deletes account.
+
+**Endpoint:** `DELETE /account/:account_id`
+
+**Authentication:** Required
+
+**Response:** `200 OK`
+
+```json
+{
+  "message": "BofA Credit Card removed",
+  "account": {
+    "id": "account_id",
+    "item_id": "item_id",
+    "plaid_account_id": "plaid_account_id",
+    "name": "Checking Account",
+    "mask": "1234",
+    "balance": "25.50",
+    "item": {
+      "institution_id": "institution_id",
+      "institution_name": "Bank Name"
+    }
+  }
+}
+```
+
+---
+
 ## Transaction Routes
 
 ### Get User Transactions
