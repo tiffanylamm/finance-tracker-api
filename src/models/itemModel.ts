@@ -35,6 +35,13 @@ export const getItem = async (filter: any) => {
   try {
     const item = await prisma.item.findUnique({
       where: filter,
+      include: {
+        _count: {
+          select: {
+            accounts: true,
+          },
+        },
+      },
     });
     return item;
   } catch (err) {
@@ -47,6 +54,13 @@ export const getUserItems = async (user_id: string) => {
     const items = await prisma.item.findMany({
       where: {
         user_id,
+      },
+      include: {
+        _count: {
+          select: {
+            accounts: true,
+          },
+        },
       },
     });
     return items;

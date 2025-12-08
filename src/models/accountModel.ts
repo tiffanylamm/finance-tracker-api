@@ -4,10 +4,14 @@ export const insertAccount = async ({
   item_id,
   plaid_account_id,
   name,
+  mask,
+  balance,
 }: {
   item_id: string;
   plaid_account_id: string;
   name: string;
+  mask: string | null;
+  balance: number | null;
 }) => {
   try {
     const account = await prisma.account.create({
@@ -15,6 +19,8 @@ export const insertAccount = async ({
         item_id,
         plaid_account_id,
         name,
+        mask,
+        balance,
       },
     });
     return account;

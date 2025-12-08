@@ -42,6 +42,8 @@ model Account {
   item_id          String
   plaid_account_id String        @unique
   name             String
+  mask             String?
+  balance          Decimal?
   item             Item          @relation(fields: [item_id], references: [id], onDelete: Cascade)
   transactions     Transaction[]
 

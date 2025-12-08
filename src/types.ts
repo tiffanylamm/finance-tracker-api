@@ -5,6 +5,8 @@ export interface Account {
   item_id: string;
   plaid_account_id: string;
   name: string;
+  mask: string | null;
+  balance: Decimal;
 }
 
 export interface Item {

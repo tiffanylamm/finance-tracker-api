@@ -157,7 +157,10 @@ Retrieves all items for a specific user.
       "plaid_item_id": "plaid_item_id",
       "institution_name": "Bank Name",
       "institution_id": "bank_id",
-      "created_at": "2024-12-01T00:00:00.000Z"
+      "created_at": "2024-12-01T00:00:00.000Z",
+      "_count": {
+        "accounts": 2
+      }
     }
   ]
 }
@@ -201,6 +204,8 @@ Retrieves all accounts for a specific user.
       "item_id": "item_id",
       "plaid_account_id": "plaid_account_id",
       "name": "Checking Account",
+      "mask": "1234",
+      "balance": "25.50",
       "item": {
         "institution_id": "institution_id",
         "institution_name": "Bank Name"
@@ -339,6 +344,14 @@ Remove plaid item.
 **Endpoint:** `POST /plaid/remove_item`
 
 **Authentication:** Required
+
+**Request Body:**
+
+```json
+{
+  "access_token": "access_token_string"
+}
+```
 
 **Response:** `200 OK`
 

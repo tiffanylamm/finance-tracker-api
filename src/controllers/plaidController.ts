@@ -75,7 +75,8 @@ export const exchangePublicToken = async (
     const exchangeRes = await client.itemPublicTokenExchange({
       public_token,
     });
-    // console.log("metadata", metadata);
+    console.log("metadata", metadata);
+    console.log("exchangeRes:", exchangeRes);
     const access_token: string = exchangeRes.data.access_token;
     const item_id: string = exchangeRes.data.item_id;
     // const itemInfo = await client.itemGet({ access_token });
@@ -109,12 +110,14 @@ const addAccountsFromItem = async ({
   try {
     const itemAccountInfo = await client.accountsGet({ access_token });
     const accountIdMap = new Map<string, string>();
-    // console.log("itemAccountInfo:", itemAccountInfo.data.accounts);
+    console.log("itemAccountInfo:", itemAccountInfo.data.accounts);
     for (let account of itemAccountInfo.data.accounts) {
       let newAccount = await accountModel.insertAccount({
         item_id,
         plaid_account_id: account.account_id,
         name: account.name,
+        mask: account.mask,
+        balance: account.balances.available,
       });
 
       accountIdMap.set(newAccount.plaid_account_id, newAccount.id);
@@ -210,7 +213,7 @@ export const removeItem = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { access_token } = req.body;
+  const access_token: string = req.body.access_token;
 
   if (!access_token) {
     return res.status(400).json({ error: "Access token is required." });
@@ -218,7 +221,6 @@ export const removeItem = async (
 
   try {
     await client.itemRemove({ access_token });
-    console.log("Item successfully removed.");
     res.status(200).json({
       success: true,
       message: `Financial institution connection removed.`,
