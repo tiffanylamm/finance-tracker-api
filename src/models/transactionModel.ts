@@ -1,5 +1,5 @@
 import prisma from "./prisma";
-import { Transaction } from "../types";
+import { Transaction, TransactionWithAccountName } from "../types";
 
 //create
 export const insertTransaction = async ({
@@ -15,7 +15,7 @@ export const insertTransaction = async ({
   iso_currency_code,
 }: Transaction): Promise<Transaction> => {
   try {
-    const transaction = await prisma.transaction.create({
+    const transaction: Transaction = await prisma.transaction.create({
       data: {
         account_id,
         plaid_transaction_id,
@@ -43,7 +43,7 @@ export const getTransactionById = async ({
   id: string;
 }): Promise<Transaction> => {
   try {
-    const transaction = await prisma.transaction.findUnique({
+    const transaction: Transaction | null = await prisma.transaction.findUnique({
       where: { id },
     });
 
@@ -61,9 +61,9 @@ export const getUserTransactions = async ({
   user_id,
 }: {
   user_id: string;
-}): Promise<Transaction[]> => {
+}): Promise<TransactionWithAccountName[]> => {
   try {
-    const transactions = await prisma.transaction.findMany({
+    const transactions: TransactionWithAccountName[] = await prisma.transaction.findMany({
       where: {
         account: {
           item: {
@@ -99,7 +99,7 @@ export const updateTransaction = async ({
   data: any;
 }): Promise<Transaction> => {
   try {
-    const transaction = await prisma.transaction.update({
+    const transaction: Transaction = await prisma.transaction.update({
       data,
       where: { id },
     });
@@ -110,3 +110,31 @@ export const updateTransaction = async ({
 };
 
 // shouldn't be able to delete transaction -- at least i wouldn't
+
+export const checkTransactionOwnership = async ({
+  transaction_id,
+  user_id,
+}: {
+  transaction_id: string;
+  user_id: string;
+}): Promise<boolean> => {
+  try {
+    const transaction = await prisma.transaction.findFirst({
+      where: {
+        id: transaction_id,
+        account: {
+          item: {
+            user_id,
+          },
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return !!transaction;
+  } catch (err) {
+    throw err;
+  }
+};

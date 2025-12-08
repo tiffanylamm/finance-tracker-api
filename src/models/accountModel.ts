@@ -1,4 +1,6 @@
 import prisma from "./prisma";
+import { Account, AccountWithInstitution } from "../types";
+
 //create
 export const insertAccount = async ({
   item_id,
@@ -12,9 +14,9 @@ export const insertAccount = async ({
   name: string;
   mask: string | null;
   balance: number | null;
-}) => {
+}): Promise<Account> => {
   try {
-    const account = await prisma.account.create({
+    const account: Account = await prisma.account.create({
       data: {
         item_id,
         plaid_account_id,
@@ -34,29 +36,34 @@ export const getAccountById = async ({
   account_id,
 }: {
   account_id: string;
-}) => {
+}): Promise<AccountWithInstitution> => {
   try {
-    const account = await prisma.account.findUnique({
-      where: { id: account_id },
-      include: {
-        item: {
-          select: {
-            institution_name: true,
+    const account: AccountWithInstitution | null =
+      await prisma.account.findUnique({
+        where: { id: account_id },
+        include: {
+          item: {
+            select: {
+              institution_id: true,
+              institution_name: true,
+            },
           },
         },
-      },
-    });
+      });
 
     if (!account) {
       throw new Error("Account not found.");
     }
+
     return account;
   } catch (err) {
     throw err;
   }
 };
 
-export const getUserAccounts = async (user_id: string) => {
+export const getUserAccounts = async (
+  user_id: string
+): Promise<AccountWithInstitution[]> => {
   try {
     const accounts = await prisma.account.findMany({
       where: {
@@ -86,9 +93,9 @@ export const updateAccount = async ({
 }: {
   account_id: string;
   name: string;
-}) => {
+}): Promise<Account> => {
   try {
-    const updatedAccount = await prisma.account.update({
+    const account = await prisma.account.update({
       data: {
         name,
       },
@@ -96,19 +103,49 @@ export const updateAccount = async ({
         id: account_id,
       },
     });
-    return updatedAccount;
+    return account;
   } catch (err) {
     throw err;
   }
 };
 
 //delete
-export const deleteAccount = async ({ account_id }: { account_id: string }) => {
+export const deleteAccount = async ({
+  account_id,
+}: {
+  account_id: string;
+}): Promise<Account> => {
   try {
     const account = await prisma.account.delete({
       where: { id: account_id },
     });
     return account;
+  } catch (err) {
+    throw err;
+  }
+};
+
+export const checkAccountOwnership = async ({
+  account_id,
+  user_id,
+}: {
+  account_id: string;
+  user_id: string;
+}): Promise<boolean> => {
+  try {
+    const account = await prisma.account.findFirst({
+      where: {
+        id: account_id,
+        item: {
+          user_id,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return !!account;
   } catch (err) {
     throw err;
   }

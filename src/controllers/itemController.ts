@@ -1,7 +1,7 @@
 import { error } from "console";
-import * as itemModel from "../models/itemModel";
 import { Request, Response, NextFunction } from "express";
-import type { Item } from "../types";
+import * as itemModel from "../models/itemModel";
+import { Item } from "../types";
 
 export const createItem = async (
   req: Request,
@@ -23,7 +23,7 @@ export const createItem = async (
       institution_name,
       institution_id,
     });
-    res.send(201).json({ message: "Item created", item });
+    res.send(201).json({ item });
   } catch (err) {
     next(err);
   }
@@ -69,8 +69,8 @@ export const deleteItem = async (
 ) => {
   try {
     const item_id: string = req.params.item_id;
-    const item: Item = await itemModel.deleteItem({ item_id });
-    res.send(200).json({ message: "Connection removed", item });
+    await itemModel.deleteItem({ item_id });
+    res.status(204).send();
   } catch (err) {
     next(error);
   }

@@ -203,7 +203,6 @@ export const getTransactions = async (
     console.log("transactions:", result.data);
     res.json(result.data);
   } catch (err) {
-    console.error(err);
     next(err);
   }
 };

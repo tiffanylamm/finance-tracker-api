@@ -24,7 +24,6 @@ const generateJwtToken = ({
       expiresIn: "2d",
     });
   } catch (err) {
-    console.error(err);
     throw err;
   }
 };
@@ -44,7 +43,6 @@ export const register = async (
     });
     const token: string = generateJwtToken({ id: user.id, email, name });
     res.status(201).json({
-      message: "Successful Register",
       token,
       user: {
         id: user.id,
@@ -83,7 +81,6 @@ export const login = async (
     });
 
     return res.status(200).json({
-      message: "Successful login",
       token,
       user: { id: user.id, email: user.email, name: user.name },
     });
@@ -102,10 +99,6 @@ export const updateUser = async (
     const { user_id } = req.params;
     const { email, name } = req.body;
 
-    if (user_id !== req.user?.id) {
-      throw new Error("Not authorized to update profile");
-    }
-
     const data: Record<string, any> = {};
     if (email) data.email = email;
     if (name) data.name = name;
@@ -116,7 +109,6 @@ export const updateUser = async (
 
     const user: User = await userModel.updateUser({ id: user_id, data });
     return res.status(200).json({
-      message: "Profile updated",
       user: { id: user.id, email: user.email, name: user.name },
     });
   } catch (err) {
@@ -132,13 +124,9 @@ export const deleteUser = async (
   try {
     const { user_id } = req.params;
 
-    if (user_id !== req.user?.id) {
-      throw new Error("Not authorized to delete user");
-    }
-
     await userModel.deleteUser({ id: user_id });
 
-    res.status(200).json({ message: "Account deleted" });
+    res.status(204).send();
   } catch (err) {
     next(err);
   }

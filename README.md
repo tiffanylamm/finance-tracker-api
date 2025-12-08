@@ -40,7 +40,6 @@ Creates a new user account.
 
 ```json
 {
-  "message": "Successful Register",
   "token": "jwt_token_here",
   "user": {
     "id": "user_id",
@@ -73,7 +72,6 @@ Authenticates a user and returns a JWT token.
 
 ```json
 {
-  "message": "Successful login",
   "token": "jwt_token_here",
   "user": {
     "id": "user_id",
@@ -106,8 +104,7 @@ Updates user information (email and/or name).
 
 ```json
 {
-  "message": "Profile updated",
-  "updatedUser": {
+  "user": {
     "id": "user_id",
     "email": "newemail@example.com",
     "name": "Jane Doe"
@@ -125,13 +122,7 @@ Deletes the authenticated user's account.
 
 **Authentication:** Required (must be the account owner)
 
-**Response:** `200 OK`
-
-```json
-{
-  "message": "Account deleted"
-}
-```
+**Response:** `204 No Content`
 
 ---
 
@@ -145,11 +136,10 @@ Create item.
 
 **Authentication:** Required
 
-**Response:** `200 OK`
+**Response:** `201 OK`
 
 ```json
 {
-  "message": "Item created",
   "item": {
     "id": "item_id",
     "user_id": "user_id",
@@ -203,22 +193,7 @@ Deletes an item.
 
 **Authentication:** Required
 
-**Response:** `200 OK`
-
-```json
-{
-  "message": "Connection removed",
-  "item": {
-    "id": "item_id",
-    "user_id": "user_id",
-    "access_token": "token",
-    "plaid_item_id": "plaid_item_id",
-    "institution_name": "Bank Name",
-    "institution_id": "bank_id",
-    "created_at": "2024-12-01T00:00:00.000Z"
-  }
-}
-```
+**Response:** `204 No Content`
 
 ---
 
@@ -275,7 +250,6 @@ Updates account(name).
 
 ```json
 {
-  "message": "BofA Credit Card updated",
   "account": {
     "id": "account_id",
     "item_id": "item_id",
@@ -301,25 +275,7 @@ Deletes account.
 
 **Authentication:** Required
 
-**Response:** `200 OK`
-
-```json
-{
-  "message": "BofA Credit Card removed",
-  "account": {
-    "id": "account_id",
-    "item_id": "item_id",
-    "plaid_account_id": "plaid_account_id",
-    "name": "Checking Account",
-    "mask": "1234",
-    "balance": "25.50",
-    "item": {
-      "institution_id": "institution_id",
-      "institution_name": "Bank Name"
-    }
-  }
-}
-```
+**Response:** `204 No Content`
 
 ---
 
@@ -501,5 +457,5 @@ PLAID_SECRET=your_plaid_secret
 PLAID_ENV=sandbox
 PLAID_PRODUCTS=transactions
 PLAID_COUNTRY_CODES=US
-PORT=8000
+PORT=9000
 ```

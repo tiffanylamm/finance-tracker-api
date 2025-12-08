@@ -1,6 +1,6 @@
 import * as accountModel from "../models/accountModel";
 import { Request, Response, NextFunction } from "express";
-import { Account } from "../types";
+import { Account, AccountWithInstitution } from "../types";
 
 export const createAccount = async (
   req: Request,
@@ -8,19 +8,7 @@ export const createAccount = async (
   next: NextFunction
 ) => {
   try {
-    const {
-      item_id,
-      plaid_account_id,
-      name,
-      mask,
-      balance,
-    }: {
-      item_id: string;
-      plaid_account_id: string;
-      name: string;
-      mask: string | null;
-      balance: number | null;
-    } = req.body;
+    const { item_id, plaid_account_id, name, mask, balance } = req.body;
 
     const account: Account = await accountModel.insertAccount({
       item_id,
@@ -30,7 +18,7 @@ export const createAccount = async (
       balance,
     });
 
-    res.status(201).json({ message: `${account.name} added`, account });
+    res.status(201).json({ account });
   } catch (err) {
     next(err);
   }
@@ -42,9 +30,11 @@ export const getAccount = async (
   next: NextFunction
 ) => {
   try {
-    const account_id: string = req.params.account_id;
+    const { account_id } = req.params;
 
-    const account: Account = await accountModel.getAccountById({ account_id });
+    const account: AccountWithInstitution = await accountModel.getAccountById({
+      account_id,
+    });
 
     res.status(200).json({ account });
   } catch (err) {
@@ -58,8 +48,11 @@ export const getUserAccounts = async (
   next: NextFunction
 ) => {
   try {
-    const user_id: string = req.user.id;
-    const accounts: Account[] = await accountModel.getUserAccounts(user_id);
+    const { id: user_id } = req.user;
+
+    const accounts: AccountWithInstitution[] =
+      await accountModel.getUserAccounts(user_id);
+
     res.status(200).json({ accounts });
   } catch (err) {
     next(err);
@@ -72,14 +65,14 @@ export const updateAccount = async (
   next: NextFunction
 ) => {
   try {
-    const account_id: string = req.params.account_id;
-    const name: string = req.body.name;
+    const { account_id } = req.params;
+    const { name } = req.body;
 
     const account: Account = await accountModel.updateAccount({
       account_id,
       name,
     });
-    res.status(200).json({ message: `${account.name} updated`, account });
+    res.status(200).json({ account });
   } catch (err) {
     next(err);
   }
@@ -91,12 +84,14 @@ export const deleteAccount = async (
   next: NextFunction
 ) => {
   try {
-    const account_id: string = req.params.account_id;
+    const { account_id } = req.params;
 
-    const account: Account = await accountModel.deleteAccount({ account_id });
+    await accountModel.deleteAccount({ account_id });
 
-    res.status(200).json({ message: `${account.name} removed`, account });
+    res.status(204).send();
   } catch (err) {
     next(err);
   }
 };
+
+

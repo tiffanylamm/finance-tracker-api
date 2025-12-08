@@ -101,3 +101,27 @@ export const deleteItem = async ({ item_id }: { item_id: string }) => {
     throw err;
   }
 };
+
+export const checkItemOwnership = async ({
+  item_id,
+  user_id,
+}: {
+  item_id: string;
+  user_id: string;
+}): Promise<boolean> => {
+  try {
+    const item = await prisma.item.findFirst({
+      where: {
+        id: item_id,
+        user_id,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return !!item;
+  } catch (err) {
+    throw err;
+  }
+};
