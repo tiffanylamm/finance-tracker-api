@@ -1,4 +1,5 @@
 import prisma from "./prisma";
+import { User } from "../types";
 
 //create
 
@@ -10,9 +11,9 @@ export const insertUser = async ({
   email: string;
   hashedPassword: string;
   name: string;
-}) => {
+}): Promise<User> => {
   try {
-    const user = await prisma.user.create({
+    const user: User = await prisma.user.create({
       data: {
         email,
         hashedPassword,
@@ -27,11 +28,16 @@ export const insertUser = async ({
 
 //read
 
-export const getUser = async (filter: any) => {
+export const getUser = async (filter: any): Promise<User | null> => {
   try {
-    const user = await prisma.user.findUnique({
+    const user: User | null = await prisma.user.findUnique({
       where: filter,
     });
+
+    // if (!user) {
+    //   throw new Error("User not found");
+    // }
+
     return user;
   } catch (err) {
     throw err;
@@ -40,9 +46,15 @@ export const getUser = async (filter: any) => {
 
 //update
 
-export const updateUser = async ({ id, data }: { id: string; data: any }) => {
+export const updateUser = async ({
+  id,
+  data,
+}: {
+  id: string;
+  data: any;
+}): Promise<User> => {
   try {
-    const user = await prisma.user.update({
+    const user: User = await prisma.user.update({
       data,
       where: { id },
     });
@@ -53,11 +65,13 @@ export const updateUser = async ({ id, data }: { id: string; data: any }) => {
 };
 
 //delete
-export const deleteUser = async ({ id }: { id: string }) => {
+
+export const deleteUser = async ({ id }: { id: string }): Promise<User> => {
   try {
-    const user = await prisma.user.delete({
+    const user: User = await prisma.user.delete({
       where: { id },
     });
+    return user;
   } catch (err) {
     throw err;
   }

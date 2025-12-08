@@ -31,3 +31,11 @@ export interface Transaction {
   pending: boolean;
   iso_currency_code: string | null;
 }
+
+export interface User {
+  id: string;
+  created_at: Date;
+  email: string;
+  hashedPassword: string;
+  name: string;
+}

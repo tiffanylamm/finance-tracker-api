@@ -2,6 +2,7 @@ import * as userModel from "../models/userModel";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
+import { User } from "../types";
 
 const generateJwtToken = ({
   id,
@@ -35,10 +36,14 @@ export const register = async (
 ) => {
   try {
     const { email, password, name } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await userModel.insertUser({ email, hashedPassword, name });
-    const token = generateJwtToken({ id: user.id, email, name });
-    return res.status(201).json({
+    const hashedPassword: string = await bcrypt.hash(password, 10);
+    const user: User = await userModel.insertUser({
+      email,
+      hashedPassword,
+      name,
+    });
+    const token: string = generateJwtToken({ id: user.id, email, name });
+    res.status(201).json({
       message: "Successful Register",
       token,
       user: {
@@ -59,20 +64,24 @@ export const login = async (
 ) => {
   try {
     const { email, password } = req.body;
-    //get user
-    const user = await userModel.getUser({ email });
+
+    const user: User | null = await userModel.getUser({ email });
+
     if (!user) {
       throw new Error("Username/Password Incorrect");
     }
-    const match = await bcrypt.compare(password, user.hashedPassword);
+
+    const match: boolean = await bcrypt.compare(password, user.hashedPassword);
+
     if (!match) {
       throw new Error("Username/Password Incorrect");
     }
-    const token = generateJwtToken({
+    const token: string = generateJwtToken({
       id: user.id,
       email: user.email,
       name: user.name,
     });
+
     return res.status(200).json({
       message: "Successful login",
       token,
@@ -93,18 +102,23 @@ export const updateUser = async (
     const { user_id } = req.params;
     const { email, name } = req.body;
 
+    if (user_id !== req.user?.id) {
+      throw new Error("Not authorized to update profile");
+    }
+
     const data: Record<string, any> = {};
     if (email) data.email = email;
     if (name) data.name = name;
 
     if (Object.keys(data).length === 0) {
-      throw new Error("No data to update.");
+      throw new Error("No data to update");
     }
 
-    const updatedUser = await userModel.updateUser({ id: user_id, data });
-    return res
-      .status(200)
-      .json({ message: "Successfully updated user.", updatedUser });
+    const user: User = await userModel.updateUser({ id: user_id, data });
+    return res.status(200).json({
+      message: "Profile updated",
+      user: { id: user.id, email: user.email, name: user.name },
+    });
   } catch (err) {
     next(err);
   }
@@ -117,18 +131,15 @@ export const deleteUser = async (
 ) => {
   try {
     const { user_id } = req.params;
+
     if (user_id !== req.user?.id) {
-      throw new Error("Not authorized to delete user.");
+      throw new Error("Not authorized to delete user");
     }
+
     await userModel.deleteUser({ id: user_id });
-    res.status(200).json({ message: "User successfully deleted." });
+
+    res.status(200).json({ message: "Account deleted" });
   } catch (err) {
     next(err);
   }
 };
-
-// export interface AuthUser {
-//   id: string;
-//   email: string;
-//   name: string;
-// }

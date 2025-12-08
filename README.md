@@ -106,7 +106,7 @@ Updates user information (email and/or name).
 
 ```json
 {
-  "message": "Successfully updated user.",
+  "message": "Profile updated",
   "updatedUser": {
     "id": "user_id",
     "email": "newemail@example.com",
@@ -129,7 +129,7 @@ Deletes the authenticated user's account.
 
 ```json
 {
-  "message": "User successfully deleted."
+  "message": "Account deleted"
 }
 ```
 
