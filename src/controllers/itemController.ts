@@ -1,6 +1,7 @@
 import { error } from "console";
 import * as itemModel from "../models/itemModel";
 import { Request, Response, NextFunction } from "express";
+import type { Item } from "../types";
 
 export const createItem = async (
   req: Request,
@@ -15,14 +16,14 @@ export const createItem = async (
       institution_name,
       institution_id,
     } = req.body;
-    const item = await itemModel.insertItem({
+    const item: Item = await itemModel.insertItem({
       user_id,
       access_token,
       plaid_item_id,
       institution_name,
       institution_id,
     });
-    res.send(201).json({ message: "Item successfully created.", item });
+    res.send(201).json({ message: "Item created", item });
   } catch (err) {
     next(err);
   }
@@ -35,7 +36,12 @@ export const getItem = async (
 ) => {
   try {
     const item_id: string = req.params.item_id;
-    const item = await itemModel.getItem({ id: item_id });
+    const item: Item | null = await itemModel.getItem({ id: item_id });
+
+    if (!item) {
+      throw new Error("Item not found");
+    }
+
     res.send(200).json({ item });
   } catch (err) {
     next(err);
@@ -49,7 +55,7 @@ export const getUserItems = async (
 ) => {
   try {
     const user_id = req.user.id;
-    const items = await itemModel.getUserItems(user_id);
+    const items: Item[] = await itemModel.getUserItems(user_id);
     res.status(200).json({ items });
   } catch (err) {
     next(err);
@@ -63,8 +69,8 @@ export const deleteItem = async (
 ) => {
   try {
     const item_id: string = req.params.item_id;
-    await itemModel.deleteItem({ item_id });
-    res.send(200).json({ message: "Item successfully deleted" });
+    const item: Item = await itemModel.deleteItem({ item_id });
+    res.send(200).json({ message: "Connection removed", item });
   } catch (err) {
     next(error);
   }

@@ -137,6 +137,33 @@ Deletes the authenticated user's account.
 
 ## Item Routes
 
+### Create Item
+
+Create item.
+
+**Endpoint:** `POST /items`
+
+**Authentication:** Required
+
+**Response:** `200 OK`
+
+```json
+{
+  "message": "Item created",
+  "item": {
+    "id": "item_id",
+    "user_id": "user_id",
+    "access_token": "token",
+    "plaid_item_id": "plaid_item_id",
+    "institution_name": "Bank Name",
+    "institution_id": "bank_id",
+    "created_at": "2024-12-01T00:00:00.000Z"
+  }
+}
+```
+
+---
+
 ### Get User Items
 
 Retrieves all items for a specific user.
@@ -179,7 +206,18 @@ Deletes an item.
 **Response:** `200 OK`
 
 ```json
-{ "message": "Item successfully deleted" }
+{
+  "message": "Connection removed",
+  "item": {
+    "id": "item_id",
+    "user_id": "user_id",
+    "access_token": "token",
+    "plaid_item_id": "plaid_item_id",
+    "institution_name": "Bank Name",
+    "institution_id": "bank_id",
+    "created_at": "2024-12-01T00:00:00.000Z"
+  }
+}
 ```
 
 ---
@@ -252,6 +290,7 @@ Updates account(name).
   }
 }
 ```
+
 ---
 
 ### Delete Account
