@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import * as transactionModel from "../models/transactionModel";
+import { ForbiddenError } from "../errors";
 
 export const authorizeTransactionAccess = async (
   req: Request,
@@ -16,11 +17,9 @@ export const authorizeTransactionAccess = async (
     });
 
     if (!belongsToUser) {
-      return res
-        .status(403)
-        .json({
-          error: "Forbidden: You don't have access to this transaction",
-        });
+      if (!belongsToUser) {
+        throw new ForbiddenError("You don't have access to transaction");
+      }
     }
 
     next();

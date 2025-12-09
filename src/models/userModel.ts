@@ -34,10 +34,6 @@ export const getUser = async (filter: any): Promise<User | null> => {
       where: filter,
     });
 
-    // if (!user) {
-    //   throw new Error("User not found");
-    // }
-
     return user;
   } catch (err) {
     throw err;

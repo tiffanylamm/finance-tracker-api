@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import * as itemModel from "../models/itemModel";
+import { ForbiddenError } from "../errors";
 
 export const authorizeItemAccess = async (
   req: Request,
@@ -16,9 +17,7 @@ export const authorizeItemAccess = async (
     });
 
     if (!belongsToUser) {
-      return res
-        .status(403)
-        .json({ error: "Forbidden: You don't have access to this item" });
+      throw new ForbiddenError("You don't have access to this item");
     }
 
     next();

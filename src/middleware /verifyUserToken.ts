@@ -1,26 +1,34 @@
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
+import { UnauthorizedError } from "../errors";
+import { AuthUser } from "../types";
+
 export const verifyToken = (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const authHeader: string = req.headers["authorization"] ?? "";
-  const token: string = authHeader.split(" ")[1];
-
-  if (!token) {
-    const error = new Error("No token provided");
-    next(error);
-  }
-
-  if (!process.env.JWT_SECRET) {
-    throw new Error("JWT_SECRET is not set");
-  }
-
   try {
-    const authData = jwt.verify(token, process.env.JWT_SECRET) as any;
-    req.user = authData;
-    return next();
+    const authHeader = req.headers["authorization"];
+
+    if (!authHeader) {
+      throw new UnauthorizedError("No authorization header provided");
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    if (!token) {
+      throw new UnauthorizedError("No token provided");
+    }
+
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET is not configured");
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET) as AuthUser;
+    req.user = decoded;
+
+    next();
   } catch (err) {
     next(err);
   }

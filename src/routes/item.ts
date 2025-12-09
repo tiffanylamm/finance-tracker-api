@@ -6,6 +6,12 @@ import { authorizeItemAccess } from "../middleware /itemAuthorization";
 const router = express.Router();
 
 router.get("/", verifyToken, itemController.getUserItems);
-router.delete("/:item_id", verifyToken, authorizeItemAccess, itemController.deleteItem);
+
+router.delete(
+  "/:item_id",
+  verifyToken,
+  authorizeItemAccess,
+  itemController.deleteItem
+);
 
 export default router;

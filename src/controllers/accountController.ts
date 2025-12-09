@@ -1,6 +1,7 @@
 import * as accountModel from "../models/accountModel";
 import { Request, Response, NextFunction } from "express";
 import { Account, AccountWithInstitution } from "../types";
+import { NotFoundError } from "../errors";
 
 export const createAccount = async (
   req: Request,
@@ -32,9 +33,14 @@ export const getAccount = async (
   try {
     const { account_id } = req.params;
 
-    const account: AccountWithInstitution = await accountModel.getAccountById({
-      account_id,
-    });
+    const account: AccountWithInstitution | null =
+      await accountModel.getAccountById({
+        account_id,
+      });
+
+    if (!account) {
+      throw new NotFoundError("Account not found");
+    }
 
     res.status(200).json({ account });
   } catch (err) {
@@ -93,5 +99,3 @@ export const deleteAccount = async (
     next(err);
   }
 };
-
-

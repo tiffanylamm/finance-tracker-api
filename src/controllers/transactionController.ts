@@ -1,6 +1,30 @@
 import * as transactionModel from "../models/transactionModel";
 import { Request, Response, NextFunction } from "express";
 import { Transaction } from "../types";
+import { NotFoundError } from "../errors";
+
+export const getTransaction = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { transaction_id } = req.params;
+
+    const transaction = await transactionModel.getTransactionById({
+      id: transaction_id,
+    });
+
+    if (!transaction) {
+      throw new NotFoundError("Transaction not found");
+    }
+
+    return transaction;
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const getTransactions = async (
   req: Request,
   res: Response,

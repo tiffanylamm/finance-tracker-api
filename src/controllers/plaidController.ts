@@ -12,6 +12,8 @@ import {
 } from "plaid";
 import { Item } from "../types";
 import { Decimal } from "@prisma/client/runtime/client";
+import { BadRequestError, NotFoundError } from "../errors";
+
 const PLAID_CLIENT_ID = process.env.PLAID_CLIENT_ID;
 const PLAID_SECRET = process.env.PLAID_SECRET;
 const PLAID_ENV = process.env.PLAID_ENV || "sandbox";
@@ -57,10 +59,8 @@ export const createLinkToken = async (
   };
   try {
     const createTokenResponse = await client.linkTokenCreate(configs);
-    // console.log("createTokenResponse:", createTokenResponse.data);
-    res.json(createTokenResponse.data);
+    res.status(200).json(createTokenResponse.data);
   } catch (err) {
-    console.error(err);
     next(err);
   }
 };
@@ -75,14 +75,13 @@ export const exchangePublicToken = async (
     const exchangeRes = await client.itemPublicTokenExchange({
       public_token,
     });
-    console.log("metadata", metadata);
-    console.log("exchangeRes:", exchangeRes);
-    const access_token: string = exchangeRes.data.access_token;
-    const item_id: string = exchangeRes.data.item_id;
+
+    const { access_token, item_id } = exchangeRes.data;
+    const { institution_name, institution_id } = metadata.institution;
+    // console.log("metadata", metadata);
+    // console.log("exchangeRes:", exchangeRes);
     // const itemInfo = await client.itemGet({ access_token });
     // console.log("itemInfo:", itemInfo.data);
-    const institution_name: string = metadata.institution.name;
-    const institution_id: string = metadata.institution.institution_id;
 
     const item: Item = await itemModel.insertItem({
       user_id: req.user.id,
@@ -94,7 +93,7 @@ export const exchangePublicToken = async (
 
     await addAccountsFromItem({ item_id: item.id, access_token });
 
-    res.json({ access_token });
+    res.status(200).json({ access_token });
   } catch (err) {
     next(err);
   }
@@ -110,7 +109,7 @@ const addAccountsFromItem = async ({
   try {
     const itemAccountInfo = await client.accountsGet({ access_token });
     const accountIdMap = new Map<string, string>();
-    console.log("itemAccountInfo:", itemAccountInfo.data.accounts);
+    // console.log("itemAccountInfo:", itemAccountInfo.data.accounts);
     for (let account of itemAccountInfo.data.accounts) {
       let newAccount = await accountModel.insertAccount({
         item_id,
@@ -172,7 +171,7 @@ const addNewItemTransactions = async ({
       });
     }
 
-    console.log("transactions:", result.data.transactions);
+    // console.log("transactions:", result.data.transactions);
   } catch (err) {
     throw err;
   }
@@ -184,24 +183,27 @@ export const getTransactions = async (
   next: NextFunction
 ) => {
   try {
-    const item_id: string = req.params.item_id;
+    const { item_id } = req.params;
     const item = await itemModel.getItem({ id: item_id });
+
     if (!item) {
-      return next({ status: 404, message: "Plaid item not found" });
+      throw new NotFoundError("Plaid item not found");
     }
-    const access_token = item.access_token;
+
+    const { access_token } = item;
     const now = new Date().toISOString().split("T")[0];
     const past = new Date(Date.now() - 30 * 24 * 3600 * 1000)
       .toISOString()
       .split("T")[0];
+
     const result = await client.transactionsGet({
       access_token,
       start_date: past,
       end_date: now,
     });
 
-    console.log("transactions:", result.data);
-    res.json(result.data);
+    // console.log("transactions:", result.data);
+    res.status(200).json(result.data);
   } catch (err) {
     next(err);
   }
@@ -212,23 +214,17 @@ export const removeItem = async (
   res: Response,
   next: NextFunction
 ) => {
-  const access_token: string = req.body.access_token;
-
-  if (!access_token) {
-    return res.status(400).json({ error: "Access token is required." });
-  }
-
   try {
+    const { access_token } = req.body;
+
+    if (!access_token) {
+      throw new BadRequestError("Access token required");
+    }
+
     await client.itemRemove({ access_token });
-    res.status(200).json({
-      success: true,
-      message: `Financial institution connection removed.`,
-    });
+
+    res.status(204).send();
   } catch (err) {
-    console.error(`Error removing plaid item.`);
-    res.status(500).json({
-      success: false,
-      error: "Failed to remove Item connection.",
-    });
+    next(err);
   }
 };

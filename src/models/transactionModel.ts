@@ -41,15 +41,13 @@ export const getTransactionById = async ({
   id,
 }: {
   id: string;
-}): Promise<Transaction> => {
+}): Promise<Transaction | null> => {
   try {
-    const transaction: Transaction | null = await prisma.transaction.findUnique({
-      where: { id },
-    });
-
-    if (!transaction) {
-      throw new Error("Transaction doesn't exist");
-    }
+    const transaction: Transaction | null = await prisma.transaction.findUnique(
+      {
+        where: { id },
+      }
+    );
 
     return transaction;
   } catch (err) {
@@ -63,25 +61,26 @@ export const getUserTransactions = async ({
   user_id: string;
 }): Promise<TransactionWithAccountName[]> => {
   try {
-    const transactions: TransactionWithAccountName[] = await prisma.transaction.findMany({
-      where: {
-        account: {
-          item: {
-            user_id,
+    const transactions: TransactionWithAccountName[] =
+      await prisma.transaction.findMany({
+        where: {
+          account: {
+            item: {
+              user_id,
+            },
           },
         },
-      },
-      include: {
-        account: {
-          select: {
-            name: true,
+        include: {
+          account: {
+            select: {
+              name: true,
+            },
           },
         },
-      },
-      orderBy: {
-        date: "desc",
-      },
-    });
+        orderBy: {
+          date: "desc",
+        },
+      });
 
     return transactions;
   } catch (err) {

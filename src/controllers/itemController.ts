@@ -2,6 +2,7 @@ import { error } from "console";
 import { Request, Response, NextFunction } from "express";
 import * as itemModel from "../models/itemModel";
 import { Item } from "../types";
+import { NotFoundError } from "../errors";
 
 export const createItem = async (
   req: Request,
@@ -39,7 +40,7 @@ export const getItem = async (
     const item: Item | null = await itemModel.getItem({ id: item_id });
 
     if (!item) {
-      throw new Error("Item not found");
+      throw new NotFoundError("Account not found");
     }
 
     res.send(200).json({ item });

@@ -7,4 +7,11 @@ const router = express.Router();
 
 router.get("/", verifyToken, transactionController.getTransactions);
 
+router.get(
+  "/:transaction_id",
+  verifyToken,
+  authorizeTransactionAccess,
+  transactionController.getTransaction
+);
+
 export default router;

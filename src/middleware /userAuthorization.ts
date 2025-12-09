@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { ForbiddenError } from "../errors";
 
 export const authorizeUserAccess = async (
   req: Request,
@@ -12,9 +13,7 @@ export const authorizeUserAccess = async (
     const belongsToUser = id === user_id;
 
     if (!belongsToUser) {
-      return res
-        .status(403)
-        .json({ error: "Forbidden: You don't have access to this user" });
+      throw new ForbiddenError("You don't have access to this user");
     }
 
     next();

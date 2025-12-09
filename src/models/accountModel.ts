@@ -36,7 +36,7 @@ export const getAccountById = async ({
   account_id,
 }: {
   account_id: string;
-}): Promise<AccountWithInstitution> => {
+}): Promise<AccountWithInstitution | null> => {
   try {
     const account: AccountWithInstitution | null =
       await prisma.account.findUnique({
@@ -50,10 +50,6 @@ export const getAccountById = async ({
           },
         },
       });
-
-    if (!account) {
-      throw new Error("Account not found.");
-    }
 
     return account;
   } catch (err) {

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import * as accountModel from "../models/accountModel";
+import { ForbiddenError } from "../errors";
 
 export const authorizeAccountAccess = async (
   req: Request,
@@ -16,9 +17,7 @@ export const authorizeAccountAccess = async (
     });
 
     if (!belongsToUser) {
-      return res
-        .status(403)
-        .json({ error: "Forbidden: You don't have access to this account" });
+      throw new ForbiddenError("You don't have access to this account");
     }
 
     next();

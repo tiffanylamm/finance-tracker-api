@@ -3,6 +3,12 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 import { User } from "../types";
+import {
+  BadRequestError,
+  UnauthorizedError,
+  NotFoundError,
+  ConflictError,
+} from "../errors";
 
 const generateJwtToken = ({
   id,
@@ -14,12 +20,10 @@ const generateJwtToken = ({
   name: string;
 }) => {
   try {
-    if (!id || !email || !name) {
-      throw new Error("Missing required fields for JWT Token.");
-    }
     if (!process.env.JWT_SECRET) {
-      throw new Error("JWT_Secret is not defined.");
+      throw new Error("JWT_Secret is not defined in environment variables");
     }
+
     return jwt.sign({ id, email, name }, process.env.JWT_SECRET, {
       expiresIn: "2d",
     });
@@ -35,13 +39,21 @@ export const register = async (
 ) => {
   try {
     const { email, password, name } = req.body;
+
+    const existingUser = await userModel.getUser({ email });
+    if (existingUser) {
+      throw new ConflictError("User with this email already exists");
+    }
+
     const hashedPassword: string = await bcrypt.hash(password, 10);
     const user: User = await userModel.insertUser({
       email,
       hashedPassword,
       name,
     });
-    const token: string = generateJwtToken({ id: user.id, email, name });
+
+    const token = generateJwtToken({ id: user.id, email, name });
+
     res.status(201).json({
       token,
       user: {
@@ -66,15 +78,16 @@ export const login = async (
     const user: User | null = await userModel.getUser({ email });
 
     if (!user) {
-      throw new Error("Username/Password Incorrect");
+      throw new UnauthorizedError("Invalid email or password");
     }
 
     const match: boolean = await bcrypt.compare(password, user.hashedPassword);
 
     if (!match) {
-      throw new Error("Username/Password Incorrect");
+      throw new UnauthorizedError("Invalid email or password");
     }
-    const token: string = generateJwtToken({
+
+    const token = generateJwtToken({
       id: user.id,
       email: user.email,
       name: user.name,
@@ -104,10 +117,18 @@ export const updateUser = async (
     if (name) data.name = name;
 
     if (Object.keys(data).length === 0) {
-      throw new Error("No data to update");
+      throw new BadRequestError("No valid fields provided for update");
+    }
+
+    if (email) {
+      const existingUser = await userModel.getUser({ email });
+      if (existingUser && existingUser.id !== user_id) {
+        throw new ConflictError("Email already in use");
+      }
     }
 
     const user: User = await userModel.updateUser({ id: user_id, data });
+
     return res.status(200).json({
       user: { id: user.id, email: user.email, name: user.name },
     });

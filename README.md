@@ -415,35 +415,126 @@ Remove plaid item.
 }
 ```
 
-**Response:** `200 OK`
-
-```json
-{
-  "success": true,
-  "message": "Financial institution connection removed."
-}
-```
+**Response:** `204 No Content`
 
 ---
 
 ## Error Responses
 
-All endpoints may return error responses in the following format:
+All endpoints return standardized error responses in the following format:
 
 **Response:** `4xx` or `5xx`
 
 ```json
 {
-  "error": "Error message describing what went wrong"
+  "status": "error",
+  "message": "Error message describing what went wrong"
 }
 ```
 
-Common error codes:
+### HTTP Status Codes
 
-- `400` - Bad Request (invalid input)
-- `401` - Unauthorized (missing or invalid token)
-- `404` - Not Found (resource doesn't exist)
-- `500` - Internal Server Error
+The API uses conventional HTTP response codes to indicate success or failure:
+
+- **`2xx`** - Success
+
+  - `200` - OK (successful request)
+  - `201` - Created (resource successfully created)
+  - `204` - No Content (successful deletion)
+
+- **`4xx`** - Client Errors
+
+  - `400` - Bad Request (invalid or missing required fields)
+  - `401` - Unauthorized (missing, invalid, or expired token)
+  - `403` - Forbidden (insufficient permissions to access resource)
+  - `404` - Not Found (resource doesn't exist)
+  - `409` - Conflict (duplicate resource, e.g., email already exists)
+
+- **`5xx`** - Server Errors
+  - `500` - Internal Server Error (unexpected server error)
+
+### Common Error Scenarios
+
+#### Authentication Errors (401)
+
+```json
+{
+  "status": "error",
+  "message": "Invalid email or password"
+}
+```
+
+```json
+{
+  "status": "error",
+  "message": "Token expired"
+}
+```
+
+#### Validation Errors (400)
+
+```json
+{
+  "status": "error",
+  "message": "Email, password, and name are required"
+}
+```
+
+```json
+{
+  "status": "error",
+  "message": "Password must be at least 8 characters long"
+}
+```
+
+#### Resource Conflicts (409)
+
+```json
+{
+  "status": "error",
+  "message": "User with this email already exists"
+}
+```
+
+```json
+{
+  "status": "error",
+  "message": "A record with this email already exists"
+}
+```
+
+#### Not Found Errors (404)
+
+```json
+{
+  "status": "error",
+  "message": "Account not found"
+}
+```
+
+```json
+{
+  "status": "error",
+  "message": "Record not found"
+}
+```
+
+#### Authorization Errors (403)
+
+```json
+{
+  "status": "error",
+  "message": "Forbidden: You don't have access to this account"
+}
+```
+
+### Database Errors
+
+Database constraint violations are automatically translated into user-friendly messages:
+
+- **Unique constraint violations** → `409 Conflict`
+- **Foreign key violations** → `400 Bad Request`
+- **Record not found** → `404 Not Found`
 
 ---
 
