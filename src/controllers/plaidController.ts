@@ -77,7 +77,7 @@ export const exchangePublicToken = async (
     });
 
     const { access_token, item_id } = exchangeRes.data;
-    const { institution_name, institution_id } = metadata.institution;
+    const { name, institution_id } = metadata.institution;
     // console.log("metadata", metadata);
     // console.log("exchangeRes:", exchangeRes);
     // const itemInfo = await client.itemGet({ access_token });
@@ -87,7 +87,7 @@ export const exchangePublicToken = async (
       user_id: req.user.id,
       access_token,
       plaid_item_id: item_id,
-      institution_name,
+      institution_name: name,
       institution_id,
     });
 
