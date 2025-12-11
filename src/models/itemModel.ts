@@ -1,4 +1,5 @@
 import prisma from "./prisma";
+import { client } from "../controllers/plaidController";
 
 //create
 export const insertItem = async ({
@@ -69,6 +70,24 @@ export const getUserItems = async (user_id: string) => {
   }
 };
 
+export const getItems = async (filter: any) => {
+  try {
+    const items = await prisma.item.findMany({
+      where: filter,
+      include: {
+        _count: {
+          select: {
+            accounts: true,
+          },
+        },
+      },
+    });
+    return items;
+  } catch (err) {
+    throw err;
+  }
+};
+
 //update
 export const updateItem = async ({
   item_id,
@@ -88,7 +107,7 @@ export const updateItem = async ({
   }
 };
 
-//delete
+//delete item from database then plaid
 export const deleteItem = async ({ item_id }: { item_id: string }) => {
   try {
     const item = await prisma.item.delete({
@@ -96,6 +115,13 @@ export const deleteItem = async ({ item_id }: { item_id: string }) => {
         id: item_id,
       },
     });
+
+    try {
+      await client.itemRemove({ access_token: item.access_token });
+    } catch (plaidErr) {
+      console.warn("Plaid removal failed:", plaidErr);
+    }
+
     return item;
   } catch (err) {
     throw err;

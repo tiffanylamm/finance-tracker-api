@@ -419,6 +419,67 @@ Remove plaid item.
 
 ---
 
+### Sync Transactions for Item
+
+Synchronizes transactions for a specific Plaid item using incremental sync. Fetches only new, modified, or removed transactions since the last sync.
+
+**Endpoint:** `POST /plaid/sync/:item_id`
+
+**Authentication:** Required
+
+**Response:** `200 OK`
+
+```json
+{
+  "added": 5,
+  "modified": 2,
+  "removed": 1,
+  "message": "Sync completed: 5 added, 2 modified, 1 removed"
+}
+```
+
+**Note:** This endpoint uses Plaid's cursor-based sync API to efficiently update transactions. It will:
+- Add new transactions that appeared since last sync
+- Update transactions that changed (e.g., pending → posted, amount corrections)
+- Remove transactions that were cancelled or corrected by the bank
+
+---
+
+### Sync All User Transactions
+
+Synchronizes transactions for all Plaid items connected to the authenticated user.
+
+**Endpoint:** `POST /plaid/sync-all`
+
+**Authentication:** Required
+
+**Response:** `200 OK`
+
+```json
+{
+  "results": [
+    {
+      "item_id": "item_abc123",
+      "institution_name": "Chase",
+      "added": 5,
+      "modified": 2,
+      "removed": 1
+    },
+    {
+      "item_id": "item_def456",
+      "institution_name": "Bank of America",
+      "added": 3,
+      "modified": 0,
+      "removed": 0
+    }
+  ]
+}
+```
+
+**Note:** If any individual item fails to sync, it will be included in the results with an error message, but other items will still be synced successfully.
+
+---
+
 ## Error Responses
 
 All endpoints return standardized error responses in the following format:

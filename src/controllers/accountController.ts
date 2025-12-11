@@ -1,4 +1,5 @@
 import * as accountModel from "../models/accountModel";
+import * as itemModel from "../models/itemModel";
 import { Request, Response, NextFunction } from "express";
 import { Account, AccountWithInstitution } from "../types";
 import { NotFoundError } from "../errors";
@@ -92,6 +93,12 @@ export const deleteAccount = async (
   try {
     const { account_id } = req.params;
 
+    const account = await accountModel.getAccountById({ account_id });
+    if (!account) {
+      throw new NotFoundError("Account doesn't exist");
+    }
+
+    //delete account
     await accountModel.deleteAccount({ account_id });
 
     res.status(204).send();

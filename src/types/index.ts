@@ -24,6 +24,7 @@ export interface Item {
   institution_name: string;
   created_at: Date;
   institution_id: string;
+  transaction_cursor: string | null;
 }
 
 export interface Transaction {

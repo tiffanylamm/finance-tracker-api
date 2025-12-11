@@ -21,4 +21,8 @@ router.get(
 
 router.post("/remove_item", verifyToken, plaidController.removeItem);
 
+router.post("/sync/:item_id", verifyToken, plaidController.syncTransactions);
+
+router.post("/sync-all", verifyToken, plaidController.syncAllUserTransactions);
+
 export default router;

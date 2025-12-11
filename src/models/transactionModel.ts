@@ -109,6 +109,20 @@ export const updateTransaction = async ({
 };
 
 // shouldn't be able to delete transaction -- at least i wouldn't
+export const deleteTransactionByPlaidId = async (
+  plaidId: string
+): Promise<Transaction> => {
+  try {
+    const transaction: Transaction = await prisma.transaction.delete({
+      where: {
+        plaid_transaction_id: plaidId,
+      },
+    });
+    return transaction;
+  } catch (err) {
+    throw err;
+  }
+};
 
 export const checkTransactionOwnership = async ({
   transaction_id,

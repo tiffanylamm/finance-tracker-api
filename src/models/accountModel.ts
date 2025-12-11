@@ -1,5 +1,6 @@
 import prisma from "./prisma";
 import { Account, AccountWithInstitution } from "../types";
+import { client } from "../controllers/plaidController";
 
 //create
 export const insertAccount = async ({
@@ -82,6 +83,21 @@ export const getUserAccounts = async (
   }
 };
 
+export const getAccountsByItemId = async (
+  item_id: string
+): Promise<Account[]> => {
+  try {
+    const accounts = await prisma.account.findMany({
+      where: {
+        item_id,
+      },
+    });
+    return accounts;
+  } catch (err) {
+    throw err;
+  }
+};
+
 //update
 export const updateAccount = async ({
   account_id,
@@ -110,12 +126,42 @@ export const deleteAccount = async ({
   account_id,
 }: {
   account_id: string;
-}): Promise<Account> => {
+}): Promise<void> => {
   try {
-    const account = await prisma.account.delete({
-      where: { id: account_id },
+    await prisma.$transaction(async (tx) => {
+      //delete account
+      const account = await tx.account.delete({
+        where: { id: account_id },
+      });
+
+      const itemId = account.item_id;
+
+      //check for remaining accounts
+      const remainingAccountsCount = await tx.account.count({
+        where: { item_id: itemId },
+      });
+
+      //delete item if count = 0
+      if (remainingAccountsCount === 0) {
+        const item = await tx.item.findUnique({
+          where: {
+            id: itemId,
+          },
+        });
+
+        await tx.item.delete({
+          where: { id: itemId },
+        });
+
+        if (item?.access_token) {
+          try {
+            await client.itemRemove({ access_token: item.access_token });
+          } catch (plaidErr) {
+            console.warn("Plaid removal failed:", plaidErr);
+          }
+        }
+      }
     });
-    return account;
   } catch (err) {
     throw err;
   }

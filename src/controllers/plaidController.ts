@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction, response } from "express";
 import * as itemModel from "../models/itemModel";
 import * as accountModel from "../models/accountModel";
 import * as transactionModel from "../models/transactionModel";
@@ -41,7 +41,7 @@ const configuration = new Configuration({
   },
 });
 
-const client = new PlaidApi(configuration);
+export const client = new PlaidApi(configuration);
 
 export const createLinkToken = async (
   req: Request,
@@ -122,13 +122,13 @@ const addAccountsFromItem = async ({
       accountIdMap.set(newAccount.plaid_account_id, newAccount.id);
     }
 
-    await addNewItemTransactions({ item_id, access_token, accountIdMap });
+    await initialTransactionSync({ item_id, access_token, accountIdMap });
   } catch (err) {
     throw err;
   }
 };
 
-const addNewItemTransactions = async ({
+const initialTransactionSync = async ({
   item_id,
   access_token,
   accountIdMap,
@@ -138,42 +138,350 @@ const addNewItemTransactions = async ({
   accountIdMap: Map<string, string>;
 }) => {
   try {
-    const now = new Date().toISOString().split("T")[0];
-    const past = new Date(Date.now() - 30 * 24 * 3600 * 1000)
-      .toISOString()
-      .split("T")[0];
-    const result = await client.transactionsGet({
-      access_token,
-      start_date: past,
-      end_date: now,
-    });
-    for (let transaction of result.data.transactions) {
-      const account_id = accountIdMap.get(transaction.account_id);
-      if (!account_id) {
-        throw new Error("Account does not exist.");
+    let cursor: string | undefined = undefined;
+    let hasMore = true;
+    let addedCount = 0;
+
+    //sync until all available transactions synced
+    while (hasMore) {
+      const request: any = { access_token };
+
+      if (cursor) {
+        request.cursor = cursor;
       }
 
-      const authorized_date = transaction.authorized_date
-        ? new Date(transaction.authorized_date)
-        : null;
+      const res = await client.transactionsSync(request);
+      const data = res.data;
 
-      await transactionModel.insertTransaction({
-        account_id: account_id,
-        plaid_transaction_id: transaction.transaction_id,
-        amount: new Decimal(transaction.amount),
-        name: transaction.name,
-        merchant_name: transaction.merchant_name ?? null,
-        category: null,
-        date: new Date(transaction.date),
-        authorized_date,
-        pending: transaction.pending,
-        iso_currency_code: transaction.iso_currency_code,
-      });
+      for (let transaction of data.added) {
+        const account_id = accountIdMap.get(transaction.account_id);
+        if (!account_id) {
+          console.warn(
+            `Account not found for transaction: ${transaction.transaction_id}`
+          );
+          continue;
+        }
+
+        const authorized_date = transaction.authorized_date
+          ? new Date(transaction.authorized_date)
+          : null;
+
+        await transactionModel.insertTransaction({
+          account_id,
+          plaid_transaction_id: transaction.transaction_id,
+          amount: new Decimal(transaction.amount),
+          name: transaction.name,
+          merchant_name: transaction.merchant_name ?? null,
+          category: null,
+          date: new Date(transaction.date),
+          authorized_date,
+          pending: transaction.pending,
+          iso_currency_code: transaction.iso_currency_code,
+        });
+        addedCount++;
+      }
+
+      //update cursor + check if more data
+      hasMore = data.has_more;
+      cursor = data.next_cursor;
     }
 
-    // console.log("transactions:", result.data.transactions);
+    //store final cursor for future syncs
+    await itemModel.updateItem({
+      item_id,
+      data: { transaction_cursor: cursor },
+    });
+
+    console.log(
+      `Initial sync completed: ${addedCount} transactions added for item ${item_id}`
+    );
   } catch (err) {
     throw err;
+  }
+};
+
+export const syncTransactions = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { item_id } = req.params;
+    const item = await itemModel.getItem({ id: item_id });
+
+    if (!item) {
+      throw new NotFoundError("Plaid item not found");
+    }
+
+    const { access_token, transaction_cursor } = item;
+
+    ////START HERE MAKE MAPPING OF PLAID_ACCOUNT_ID TO OUR ACCOUNT_ID
+    const accounts = await accountModel.getAccountsByItemId(item_id);
+    const accountIdMap = new Map<string, string>();
+    accounts.forEach((account) => {
+      accountIdMap.set(account.plaid_account_id, account.id);
+    });
+
+    let cursor = transaction_cursor || undefined;
+    let hasMore = true;
+    let added = 0;
+    let modified = 0;
+    let removed = 0;
+
+    while (hasMore) {
+      const request: any = {
+        access_token,
+      };
+
+      if (cursor) {
+        request.cursor = cursor;
+      }
+
+      const response = await client.transactionsSync(request);
+      const data = response.data;
+
+      //process added transactions
+      for (let transaction of data.added) {
+        const account_id = accountIdMap.get(transaction.account_id);
+        if (!account_id) {
+          console.warn(
+            `Account not found for transaction: ${transaction.transaction_id}`
+          );
+          continue;
+        }
+
+        const authorized_date = transaction.authorized_date
+          ? new Date(transaction.authorized_date)
+          : null;
+
+        try {
+          await transactionModel.insertTransaction({
+            account_id,
+            plaid_transaction_id: transaction.transaction_id,
+            amount: new Decimal(transaction.amount),
+            name: transaction.name,
+            merchant_name: transaction.merchant_name ?? null,
+            category: null,
+            date: new Date(transaction.date),
+            authorized_date,
+            pending: transaction.pending,
+            iso_currency_code: transaction.iso_currency_code,
+          });
+          added++;
+        } catch (err) {
+          console.error(
+            `Error inserting transaction ${transaction.transaction_id}:`,
+            err
+          );
+        }
+      }
+
+      //process modified transactions
+      for (let transaction of data.modified) {
+        const account_id = accountIdMap.get(transaction.account_id);
+        if (!account_id) {
+          console.warn(
+            `Account not found for transaction: ${transaction.transaction_id}`
+          );
+          continue;
+        }
+
+        const authorized_date = transaction.authorized_date
+          ? new Date(transaction.authorized_date)
+          : null;
+
+        try {
+          await transactionModel.updateTransaction({
+            id: transaction.transaction_id,
+            data: {
+              account_id,
+              amount: new Decimal(transaction.amount),
+              name: transaction.name,
+              merchant_name: transaction.merchant_name ?? null,
+              date: new Date(transaction.date),
+              authorized_date,
+              pending: transaction.pending,
+              iso_currency_code: transaction.iso_currency_code,
+            },
+          });
+          modified++;
+        } catch (err) {
+          console.error(
+            `Error updating transaction ${transaction.transaction_id}:`,
+            err
+          );
+        }
+      }
+
+      //process removed transactions
+      for (let transaction of data.removed) {
+        try {
+          await transactionModel.deleteTransactionByPlaidId(
+            transaction.transaction_id
+          );
+          removed++;
+        } catch (err) {
+          console.error(
+            `Error removing transaction ${transaction.transaction_id}:`,
+            err
+          );
+        }
+      }
+
+      hasMore = data.has_more;
+      cursor = data.next_cursor;
+    }
+
+    //store latest cursor
+    await itemModel.updateItem({
+      item_id,
+      data: { transaction_cursor: cursor },
+    });
+
+    res.status(200).json({
+      added,
+      modified,
+      removed,
+      message: `Sync completed: ${added} added, ${modified} modified, ${removed} removed`,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const syncAllUserTransactions = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = req.user.id;
+    const items = await itemModel.getItems({ user_id: userId });
+
+    const results = [];
+
+    for (let item of items) {
+      try {
+        const { access_token, transaction_cursor } = item;
+
+        const accounts = await accountModel.getAccountsByItemId(item.id);
+        const accountIdMap = new Map<string, string>();
+        accounts.forEach((account) => {
+          accountIdMap.set(account.plaid_account_id, account.id);
+        });
+
+        let cursor = transaction_cursor || undefined;
+        let hasMore = true;
+        let added = 0;
+        let modified = 0;
+        let removed = 0;
+
+        while (hasMore) {
+          const request: any = { access_token };
+          if (cursor) request.cursor = cursor;
+
+          const response = await client.transactionsSync(request);
+          const data = response.data;
+
+          // Process transactions (same logic as syncTransactions)
+          for (let transaction of data.added) {
+            const account_id = accountIdMap.get(transaction.account_id);
+            if (!account_id) continue;
+
+            const authorized_date = transaction.authorized_date
+              ? new Date(transaction.authorized_date)
+              : null;
+
+            try {
+              await transactionModel.insertTransaction({
+                account_id,
+                plaid_transaction_id: transaction.transaction_id,
+                amount: new Decimal(transaction.amount),
+                name: transaction.name,
+                merchant_name: transaction.merchant_name ?? null,
+                category: null,
+                date: new Date(transaction.date),
+                authorized_date,
+                pending: transaction.pending,
+                iso_currency_code: transaction.iso_currency_code,
+              });
+              added++;
+            } catch (err) {
+              console.error(`Error inserting transaction:`, err);
+            }
+          }
+
+          for (let transaction of data.modified) {
+            const account_id = accountIdMap.get(transaction.account_id);
+            if (!account_id) continue;
+
+            const authorized_date = transaction.authorized_date
+              ? new Date(transaction.authorized_date)
+              : null;
+
+            try {
+              await transactionModel.updateTransaction({
+                id: transaction.transaction_id,
+                data: {
+                  account_id,
+                  amount: new Decimal(transaction.amount),
+                  name: transaction.name,
+                  merchant_name: transaction.merchant_name ?? null,
+                  date: new Date(transaction.date),
+                  authorized_date,
+                  pending: transaction.pending,
+                  iso_currency_code: transaction.iso_currency_code,
+                },
+              });
+              modified++;
+            } catch (err) {
+              console.error(`Error updating transaction:`, err);
+            }
+          }
+
+          for (let transaction of data.removed) {
+            try {
+              await transactionModel.deleteTransactionByPlaidId(
+                transaction.transaction_id
+              );
+              removed++;
+            } catch (err) {
+              console.error(`Error removing transaction:`, err);
+            }
+          }
+
+          hasMore = data.has_more;
+          cursor = data.next_cursor;
+        }
+
+        await itemModel.updateItem({
+          item_id: item.id,
+          data: { transaction_cursor: cursor },
+        });
+
+        results.push({
+          item_id: item.id,
+          institution_name: item.institution_name,
+          added,
+          modified,
+          removed,
+        });
+      } catch (err) {
+        console.error(`Error syncing item ${item.id}:`, err);
+        results.push({
+          item_id: item.id,
+          institution_name: item.institution_name,
+          error: err instanceof Error ? err.message : "Sync failed",
+        });
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      results,
+    });
+  } catch (err) {
+    next(err);
   }
 };
 

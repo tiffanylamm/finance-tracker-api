@@ -24,15 +24,16 @@ model User {
 }
 
 model Item {
-  id               String    @id @default(uuid())
-  user_id          String
-  access_token     String    @unique
-  plaid_item_id    String    @unique
-  institution_name String
-  institution_id   String
-  created_at       DateTime  @default(now())
-  user             User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  accounts         Account[]
+  id                 String    @id @default(uuid())
+  user_id            String
+  access_token       String    @unique
+  plaid_item_id      String    @unique
+  institution_name   String
+  institution_id     String
+  transaction_cursor String?
+  created_at         DateTime  @default(now())
+  user               User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  accounts           Account[]
 
   @@map("items")
 }
