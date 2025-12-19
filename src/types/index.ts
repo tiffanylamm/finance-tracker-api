@@ -28,6 +28,7 @@ export interface Item {
 }
 
 export interface Transaction {
+  id: string;
   account_id: string;
   plaid_transaction_id: string;
   amount: Decimal;

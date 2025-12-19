@@ -5,7 +5,7 @@ import { authorizeTransactionAccess } from "../middleware /transactionAuthorizat
 
 const router = express.Router();
 
-router.get("/", verifyToken, transactionController.getTransactions);
+router.get("/", verifyToken, transactionController.getTransactionsWithCursor);
 
 router.get(
   "/:transaction_id",

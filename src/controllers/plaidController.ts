@@ -243,12 +243,7 @@ export const syncTransactions = async (
       //process added transactions
       for (let transaction of data.added) {
         const account_id = accountIdMap.get(transaction.account_id);
-        if (!account_id) {
-          console.warn(
-            `Account not found for transaction: ${transaction.transaction_id}`
-          );
-          continue;
-        }
+        if (!account_id) continue;
 
         const authorized_date = transaction.authorized_date
           ? new Date(transaction.authorized_date)
@@ -279,12 +274,7 @@ export const syncTransactions = async (
       //process modified transactions
       for (let transaction of data.modified) {
         const account_id = accountIdMap.get(transaction.account_id);
-        if (!account_id) {
-          console.warn(
-            `Account not found for transaction: ${transaction.transaction_id}`
-          );
-          continue;
-        }
+        if (!account_id) continue;
 
         const authorized_date = transaction.authorized_date
           ? new Date(transaction.authorized_date)
@@ -477,7 +467,6 @@ export const syncAllUserTransactions = async (
     }
 
     res.status(200).json({
-      success: true,
       results,
     });
   } catch (err) {
