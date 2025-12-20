@@ -2,6 +2,7 @@ import * as transactionModel from "../models/transactionModel";
 import { Request, Response, NextFunction } from "express";
 import { Transaction } from "../types";
 import { NotFoundError } from "../errors";
+import { BadRequestError } from "../errors";
 
 export const getTransaction = async (
   req: Request,
@@ -100,11 +101,18 @@ export const updateTransaction = async (
   next: NextFunction
 ) => {
   try {
-    const { id: user_id } = req.user;
-    const { data } = req.body;
+    const { transaction_id } = req.params;
+    const { name } = req.body;
+
+    const data: Record<string, any> = {};
+    if (name) data.name = name;
+
+    if (Object.keys(data).length === 0) {
+      throw new BadRequestError("No valid fields provided for update");
+    }
 
     const transaction: Transaction = await transactionModel.updateTransaction({
-      id: user_id,
+      id: transaction_id,
       data,
     });
 

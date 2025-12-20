@@ -14,4 +14,11 @@ router.get(
   transactionController.getTransaction
 );
 
+router.put(
+  "/:transaction_id",
+  verifyToken,
+  authorizeTransactionAccess,
+  transactionController.updateTransaction
+);
+
 export default router;

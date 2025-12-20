@@ -317,6 +317,48 @@ Retrieves all transactions for a specific user.
 
 ---
 
+### Update Transaction
+
+Updates transaction (any data).
+
+**Endpoint:** `PUT /transactions/:transaction_id`
+
+**Authentication:** Required
+
+**Request Body:**
+
+```json
+{
+  "name": "Jane Doe"
+}
+```
+
+**Response:** `200 OK`
+
+```json
+{
+  "transaction": {
+    "id": "transaction_id",
+    "account_id": "account_id",
+    "plaid_transaction_id": "plaid_txn_id",
+    "amount": "25.50",
+    "name": "Coffee Shop",
+    "merchant_name": "Starbucks",
+    "category": [],
+    "date": "2024-12-01T00:00:00.000Z",
+    "authorized_date": "2024-12-01T00:00:00.000Z",
+    "pending": false,
+    "iso_currency_code": "USD",
+    "created_at": "2024-12-01T00:00:00.000Z",
+    "account": {
+      "name": "Checking Account"
+    }
+  }
+}
+```
+
+---
+
 ## Plaid Routes
 
 ### Create Link Token
@@ -439,6 +481,7 @@ Synchronizes transactions for a specific Plaid item using incremental sync. Fetc
 ```
 
 **Note:** This endpoint uses Plaid's cursor-based sync API to efficiently update transactions. It will:
+
 - Add new transactions that appeared since last sync
 - Update transactions that changed (e.g., pending → posted, amount corrections)
 - Remove transactions that were cancelled or corrected by the bank
